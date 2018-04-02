@@ -101,7 +101,7 @@ indexApp.controller('IndexController', function PhoneListController($scope) {
             });
             $scope.map.fitBounds(bounds);
             //this is where the coordinates need to be obtained and passed
-            $scope.airQualityRequest();
+            $scope.airQualityRequest(places[0].geometry.location.lat() + ',' + places[0].geometry.location.lng());
             //for testing
             yep = $scope.bounds(0,0,0,0);
         });
@@ -118,7 +118,7 @@ indexApp.controller('IndexController', function PhoneListController($scope) {
             cache: false,
             contentType: "application/json; charset=utf-8",
             success: function (data) {
-                $scope.airQuality = JSON.parse(data);
+                $scope.airQuality = data.results;
                 $scope.$apply()
             },
             error: function () {
