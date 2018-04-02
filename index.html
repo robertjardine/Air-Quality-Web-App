@@ -8,15 +8,82 @@
         <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
         <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
         <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.9/angular.min.js"></script>
+        <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDM-CFAHVNhqiY5Ns3UZPqoYiOXcOjjKzc&libraries=places"></script>
         <script src="js/index.js"></script>
         <link rel="stylesheet" href="css/index.css"/>
     </head>
     <body>
         <div ng-controller="IndexController">
+
+            <!-- Navbar -->
+            <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+                <a class="navbar-brand" href="#">Air Quality</a>
+                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarText" aria-controls="navbarText" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarText">
+                    <ul class="navbar-nav mr-auto">
+                        <li class="nav-item active"><a class="nav-link" href="#">Home </a></li>
+                        <li class="nav-item"><a class="nav-link" href="../views/about.html">About The Project </a></li>
+                    </ul>
+                </div>
+            </nav>
+
             <div class="container-fluid">
                 <div class="row justify-content-center">
-                    <div class="col-sm text-center" style="color:white;">
-                        SAMPLE COL IN ROW!
+                    <div class="col-sm text-center">
+                        <div id="map" data-ng-init="init()"></div>
+                        <input id="pac-input" class="controls" type="text" placeholder="Search Box" ng-init="initSearchBox()">
+                        <table id="map-input">
+                            <thead>
+                            <th>Latitude</th>
+                            <th>Longitude</th>
+                            <th>Particle Type</th>
+                            <th>Minimum Amount</th>
+                            </thead>
+                            <tbody>
+                            <tr>
+                                <td><input type="text" id="lat" name="lat" value="36.922222"/></td>
+                                <td><input type="text" id="long" name="long" value="-94.83889"/></td>
+                                <td>
+                                    <div class="form-group">
+                                        <select class="form-control" id="particle">
+                                            <option>Default</option>
+                                            <option>bc</option>
+                                            <option>co</option>
+                                            <option>no2</option>
+                                            <option>o3</option>
+                                            <option>pm10</option>
+                                            <option>pm25</option>
+                                            <option>so2</option>
+                                        </select>
+                                    </div>
+                                </td>
+                                <td><input type="text" id="amount"/></td>
+                                <td><button>Submit Location</button></td>
+                            </tr>
+                            </tbody>
+                        </table>
+                        <table id="air-data">
+                            <thead>
+                                <th>Location</th>
+                                <th>Date</th>
+                                <th>Chemical</th>
+                                <th>Value</th>
+                                <th>Unit</th>
+                            </thead>
+                            <tbody id="air-body">
+                                <div>
+                                    <tr ng-repeat="values in airQuality track by $index">
+                                        <td>{{values.location}}</td>
+                                        <td>{{values.date.local}}</td>
+                                        <td>{{values.parameter}}</td>
+                                        <td>{{values.value}}</td>
+                                        <td>{{values.unit}}</td>
+                                    </tr>
+                                </div>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
