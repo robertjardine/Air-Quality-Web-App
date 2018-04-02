@@ -1,0 +1,32 @@
+body {
+   background-color: #181818;
+   color: white;
+   text-align: center;
+}
+
+blockquote {
+    margin: auto;
+}
+
+table {
+    width: 100%;
+}
+
+img {
+    width: 300px;
+}
+
+blockquote {
+    width: 50%;
+}
+
+hr {
+    background-color: white;
+    width: 80%;
+}
+
+#map {
+    width: 400px;
+    height: 400px;
+    margin: auto;
+}
