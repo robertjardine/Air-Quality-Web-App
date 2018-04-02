@@ -34,7 +34,7 @@
                     <div class="col-sm text-center">
                         <div id="map" data-ng-init="init()"></div>
                         <input id="pac-input" class="controls" type="text" placeholder="Search Box" ng-init="initSearchBox()">
-                        <table id="map-input">
+                        <table class="table table-striped dynamicTable" id="map-input">
                             <thead>
                             <th>Latitude</th>
                             <th>Longitude</th>
@@ -64,7 +64,7 @@
                             </tr>
                             </tbody>
                         </table>
-                        <table id="air-data">
+                        <table id="air-data" class="table table-striped dynamicTable">
                             <thead>
                                 <th>Location</th>
                                 <th>Date</th>
