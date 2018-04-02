@@ -109,10 +109,11 @@ indexApp.controller('IndexController', function PhoneListController($scope) {
 
     $scope.airQualityRequest = function (coordinates) {
         send = {
-            coordinates: coordinates
+            coordinates: coordinates,
+            radius: 10000
         };
         $.ajax({
-            url: 'https://api.openaq.org/v1/measurements',
+            url: 'https://api.openaq.org/v1/latest',
             data: send,
             type: 'GET',
             cache: false,

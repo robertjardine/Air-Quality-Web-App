@@ -72,16 +72,23 @@
                                 <th>Value</th>
                                 <th>Unit</th>
                             </thead>
-                            <tbody id="air-body">
-                                <div>
-                                    <tr ng-repeat="values in airQuality track by $index">
+                            <tbody id="air-body" ng-repeat="values in airQuality track by $index">
+                                <!--THIS IS THE OLD WAY FOR HISTORICAL DATA
+                                    WE STILL NEED THIS FOR WHEN WE RE-IMPLEMENT THAT
+                                <tr ng-repeat="values in airQuality track by $index">
+                                    <td>{{values.location}}</td>
+                                    <td>{{values.date.local}}</td>
+                                    <td>{{values.parameter}}</td>
+                                    <td>{{values.value}}</td>
+                                    <td>{{values.unit}}</td>
+                                </tr>-->
+                                    <tr ng-repeat="measure in values.measurements track by $index">
                                         <td>{{values.location}}</td>
-                                        <td>{{values.date.local}}</td>
-                                        <td>{{values.parameter}}</td>
-                                        <td>{{values.value}}</td>
-                                        <td>{{values.unit}}</td>
+                                        <td>{{measure.lastUpdated}}</td>
+                                        <td>{{measure.parameter}}</td>
+                                        <td>{{measure.value}}</td>
+                                        <td>{{measure.unit}}</td>
                                     </tr>
-                                </div>
                             </tbody>
                         </table>
                     </div>
