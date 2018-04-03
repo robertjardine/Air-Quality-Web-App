@@ -36,32 +36,27 @@
                         <input id="pac-input" class="controls" type="text" placeholder="Search Box" ng-init="initSearchBox()">
                         <table class="table table-striped dynamicTable" id="map-input">
                             <thead>
-                            <th>Latitude</th>
-                            <th>Longitude</th>
-                            <th>Particle Type</th>
-                            <th>Minimum Amount</th>
+                                <th>Particle Type</th>
+                                <th>Minimum Amount</th>
                             </thead>
                             <tbody>
-                            <tr>
-                                <td><input type="text" id="lat" name="lat" value="36.922222"/></td>
-                                <td><input type="text" id="long" name="long" value="-94.83889"/></td>
-                                <td>
-                                    <div class="form-group">
-                                        <select class="form-control" id="particle">
-                                            <option>Default</option>
-                                            <option>bc</option>
-                                            <option>co</option>
-                                            <option>no2</option>
-                                            <option>o3</option>
-                                            <option>pm10</option>
-                                            <option>pm25</option>
-                                            <option>so2</option>
-                                        </select>
-                                    </div>
-                                </td>
-                                <td><input type="text" id="amount"/></td>
-                                <td><button>Submit Location</button></td>
-                            </tr>
+                                <tr>
+                                    <td>
+                                        <div class="form-group">
+                                            <select class="form-control" id="particle">
+                                                <option selected>Default</option>
+                                                <option>bc</option>
+                                                <option>co</option>
+                                                <option>no2</option>
+                                                <option>o3</option>
+                                                <option>pm10</option>
+                                                <option>pm25</option>
+                                                <option>so2</option>
+                                            </select>
+                                        </div>
+                                    </td>
+                                    <td><input type="text" id="amount"/></td>
+                                </tr>
                             </tbody>
                         </table>
                         <table id="air-data" class="table table-striped dynamicTable">
