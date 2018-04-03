@@ -149,4 +149,32 @@ indexApp.controller('IndexController', function PhoneListController($scope) {
             }
         });
     };
+    
+    //Filter when a new option is selected
+    $("#particle").change(filterParticle);
+    $("#amount").bind('input', filterParticle);
+
+    function filterParticle() {
+        var amountValue = $("#amount").val();
+        amountValue = (amountValue || !isNaN(amountValue)) ? amountValue : 0;
+        var particleValue = $("#particle").val();
+
+        $("#air-body > tr").show();
+        $("#air-body > tr").each(function() {
+            let currAmount = $(this).find("td").eq(3).html();
+            let currParticle = $(this).find("td").eq(2).html();
+
+            if (particleValue == 'Default') {
+                if (amountValue > currAmount) {
+                    $(this).hide();
+                    //Get matching marker and hide from map
+                    //marker.setVisible(false);
+                }
+            } else if ((particleValue != currParticle) ||((particleValue == currParticle) && (amountValue > currAmount))) {
+                $(this).hide();
+                //Get matching marker and hide from map
+                //marker.setVisible(false);
+            } 
+        });
+    }
 });
