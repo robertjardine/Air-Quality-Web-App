@@ -24,23 +24,45 @@ indexApp.controller('IndexController', function PhoneListController($scope) {
 
     $scope.map;
 
+    $scope.geocoder;
+
     $scope.searchBox;
 
     $scope.yep;
 
     $scope.init = function() {
-        var uluru = {lat: -34.397, lng: 150.644}; //37.6330082,-97.2156839,5.23z
+        var uluru = {lat: -34.397, lng: 150.644};
         $scope.map = new google.maps.Map(document.getElementById('map'), {
             zoom: 8,
             center: uluru,
             scaleControl: true
+        });
+
+        $scope.geocoder = new google.maps.Geocoder;
+
+        $scope.map.addListener('dragend', function(evt) {
+            //alert('Current Lat: ' + evt.latLng.lat().toFixed(3) + ' Current Lng: ' + evt.latLng.lng().toFixed(3));
+            //var latlng = {lat: parseFloat(latlngStr[0]), lng: parseFloat(latlngStr[1])};
+            var latlng = {lat: parseFloat(evt.latLng.lat()), lng: parseFloat(evt.latLng.lng())};
+            $scope.geocoder.geocode({'location': latlng}, function(results, status) {
+                if (status === 'OK') {
+                    if (results[0]) {
+                        document.getElementById('pac-input').value=results[0].formatted_address;
+                        $scope.airQualityRequest(evt.latLng.lat() + "," + evt.latLng.lng());
+                    } else {
+                        window.alert('No results found');
+                    }
+                } else {
+                    window.alert('Geocoder failed due to: ' + status);
+                }
+            });
         });
         // var marker = new google.maps.Marker({
         //     position: uluru,
         //     map: map
         // });
 
-    }
+    };
 
     $scope.initSearchBox = function () {
         // Create the search box and link it to the UI element.
