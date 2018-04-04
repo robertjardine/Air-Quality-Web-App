@@ -40,10 +40,10 @@ indexApp.controller('IndexController', function PhoneListController($scope) {
 
         $scope.geocoder = new google.maps.Geocoder;
 
-        $scope.map.addListener('dragend', function(evt) {
-            //alert('Current Lat: ' + evt.latLng.lat().toFixed(3) + ' Current Lng: ' + evt.latLng.lng().toFixed(3));
-            //var latlng = {lat: parseFloat(latlngStr[0]), lng: parseFloat(latlngStr[1])};
-            var latlng = {lat: parseFloat(evt.latLng.lat()), lng: parseFloat(evt.latLng.lng())};
+        $scope.map.addListener('dragend', function() {
+            var lat = $scope.map.getCenter().lat();
+            var lng = $scope.map.getCenter().lng();
+            var latlng = {lat: lat, lng: lng};
             $scope.geocoder.geocode({'location': latlng}, function(results, status) {
                 if (status === 'OK') {
                     if (results[0]) {
@@ -149,7 +149,7 @@ indexApp.controller('IndexController', function PhoneListController($scope) {
             }
         });
     };
-    
+
     //Filter when a new option is selected
     $("#particle").change(filterParticle);
     $("#amount").bind('input', filterParticle);
@@ -161,8 +161,8 @@ indexApp.controller('IndexController', function PhoneListController($scope) {
 
         $("#air-body > tr").show();
         $("#air-body > tr").each(function() {
-            let currAmount = $(this).find("td").eq(3).html();
-            let currParticle = $(this).find("td").eq(2).html();
+            var currAmount = $(this).find("td").eq(3).html();
+            var currParticle = $(this).find("td").eq(2).html();
 
             if (particleValue == 'Default') {
                 if (amountValue > currAmount) {
@@ -174,7 +174,7 @@ indexApp.controller('IndexController', function PhoneListController($scope) {
                 $(this).hide();
                 //Get matching marker and hide from map
                 //marker.setVisible(false);
-            } 
+            }
         });
     }
 });
