@@ -48,7 +48,7 @@ indexApp.controller('IndexController', function PhoneListController($scope) {
                 if (status === 'OK') {
                     if (results[0]) {
                         document.getElementById('pac-input').value=results[0].formatted_address;
-                        $scope.airQualityRequest(evt.latLng.lat() + "," + evt.latLng.lng());
+                        $scope.airQualityRequest(lat + "," + lng);
                     } else {
                         window.alert('No results found');
                     }
@@ -130,9 +130,14 @@ indexApp.controller('IndexController', function PhoneListController($scope) {
     };
 
     $scope.airQualityRequest = function (coordinates) {
+        //$scope.map.getCenter().lat();
+        var bounds = $scope.map.getBounds();
+        var NE = bounds.getNorthEast();
+        var SW = bounds.getSouthWest();
+        var distance = google.maps.geometry.spherical.computeDistanceBetween (NE, SW);
         send = {
             coordinates: coordinates,
-            radius: 10000
+            radius: distance/2
         };
         $.ajax({
             url: 'https://api.openaq.org/v1/latest',
