@@ -38,6 +38,7 @@
                             <thead>
                                 <th>Particle Type</th>
                                 <th>Minimum Amount</th>
+                                <th>Submit </th>
                             </thead>
                             <tbody>
                                 <tr>
@@ -77,13 +78,13 @@
                                     <td>{{values.value}}</td>
                                     <td>{{values.unit}}</td>
                                 </tr>-->
-                                    <tr ng-repeat="measure in values.measurements track by $index">
-                                        <td>{{values.location}}</td>
-                                        <td>{{measure.lastUpdated}}</td>
-                                        <td>{{measure.parameter}}</td>
-                                        <td>{{measure.value}}</td>
-                                        <td>{{measure.unit}}</td>
-                                    </tr>
+								<tr ng-repeat="measure in values.measurements track by $index">
+									<td>{{values.location}}</td>
+									<td>{{measure.lastUpdated}}</td>
+									<td>{{measure.parameter}}</td>
+									<td>{{measure.value}}</td>
+									<td>{{measure.unit}}</td>
+								</tr>
                             </tbody>
                         </table>
                     </div>

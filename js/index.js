@@ -1,5 +1,8 @@
 var indexApp = angular.module('indexApp', []);
 
+var markers = [];
+var hiddenMarkers = [];
+
 indexApp.controller('IndexController', function PhoneListController($scope) {
     $scope.bounds = function(npad,spad,wpad,epad) {
         //I don't think we need this function
@@ -27,8 +30,6 @@ indexApp.controller('IndexController', function PhoneListController($scope) {
     $scope.geocoder;
 
     $scope.searchBox;
-
-    $scope.yep;
 
     $scope.init = function() {
         var uluru = {lat: -34.397, lng: 150.644};
@@ -79,7 +80,6 @@ indexApp.controller('IndexController', function PhoneListController($scope) {
             $scope.searchBox.setBounds($scope.map.getBounds());
         });
 
-        var markers = [];
         // Listen for the event fired when the user selects a prediction and retrieve
         // more details for that place.
         $scope.searchBox.addListener('places_changed', function() {
@@ -98,25 +98,25 @@ indexApp.controller('IndexController', function PhoneListController($scope) {
             //For each place, get the icon, name and location.
             var bounds = new google.maps.LatLngBounds();
             places.forEach(function (place) {
-                // if (!place.geometry) {
-                //     console.log("Returned place contains no geometry");
-                //     return;
-                // }
-                // var icon = {
-                //     url: place.icon,
-                //     size: new google.maps.Size(71, 71),
-                //     origin: new google.maps.Point(0, 0),
-                //     anchor: new google.maps.Point(17, 34),
-                //     scaledSize: new google.maps.Size(25, 25)
-                // };
-                //
-                // // Create a marker for each place.
-                // markers.push(new google.maps.Marker({
-                //     map: map,
-                //     icon: icon,
-                //     title: place.name,
-                //     position: place.geometry.location
-                // }));
+                if (!place.geometry) {
+                    console.log("Returned place contains no geometry");
+                    return;
+                }
+                var icon = {
+                    url: place.icon,
+                    size: new google.maps.Size(71, 71),
+                    origin: new google.maps.Point(0, 0),
+                    anchor: new google.maps.Point(17, 34),
+                    scaledSize: new google.maps.Size(25, 25)
+                };
+
+                // Create a marker for each place.
+                markers.push(new google.maps.Marker({
+                    map: $scope.map,
+                    icon: icon,
+                    title: place.name,
+                    position: place.geometry.location
+                }));
 
                 if (place.geometry.viewport) {
                     // Only geocodes have viewport.
@@ -128,8 +128,6 @@ indexApp.controller('IndexController', function PhoneListController($scope) {
             $scope.map.fitBounds(bounds);
             //this is where the coordinates need to be obtained and passed
             $scope.airQualityRequest(places[0].geometry.location.lat() + ',' + places[0].geometry.location.lng());
-            //for testing
-            yep = $scope.bounds(0,0,0,0);
         });
     };
 
@@ -151,7 +149,8 @@ indexApp.controller('IndexController', function PhoneListController($scope) {
             contentType: "application/json; charset=utf-8",
             success: function (data) {
                 $scope.airQuality = data.results;
-                $scope.$apply()
+                $scope.$apply();
+                placeMarkers($scope.airQuality);
             },
             error: function () {
                 alert('error');
@@ -159,31 +158,50 @@ indexApp.controller('IndexController', function PhoneListController($scope) {
         });
     };
 
-    //Filter when a new option is selected
-    $("#particle").change(filterParticle);
-    $("#amount").bind('input', filterParticle);
+    function placeMarkers(results) {
+        for (var i=0; i<results.length; i++) {
+			var lat = results[i].coordinates.latitude;
+			var lng = results[i].coordinates.longitude;
+			var latlng = new google.maps.LatLng(parseFloat(lat),parseFloat(lng));
 
-    function filterParticle() {
-        var amountValue = $("#amount").val();
-        amountValue = (amountValue || !isNaN(amountValue)) ? amountValue : 0;
-        var particleValue = $("#particle").val();
-
-        $("#air-body > tr").show();
-        $("#air-body > tr").each(function() {
-            var currAmount = $(this).find("td").eq(3).html();
-            var currParticle = $(this).find("td").eq(2).html();
-
-            if (particleValue == 'Default') {
-                if (amountValue > currAmount) {
-                    $(this).hide();
-                    //Get matching marker and hide from map
-                    //marker.setVisible(false);
-                }
-            } else if ((particleValue != currParticle) ||((particleValue == currParticle) && (amountValue > currAmount))) {
-                $(this).hide();
-                //Get matching marker and hide from map
-                //marker.setVisible(false);
+            var curr =
+                new google.maps.Marker({
+                    map: $scope.map,
+                    position: latlng
+                });
+            if (markers.indexOf(curr) === -1) {
+                markers.push(curr);
             }
-        });
+        }
     }
+
+    // //Filter when a new option is selected
+    // $("#particle").change(filterParticle);
+    // $("#amount").bind('input', filterParticle);
+	//
+    // function filterParticle() {
+    //     var amountValue = $("#amount").val();
+    //     amountValue = (amountValue || !isNaN(amountValue)) ? amountValue : 0;
+    //     var particleValue = $("#particle").val();
+	//
+    //     $("#air-body > tr").show();
+    //     showMarkers();
+    //     $("#air-body > tr").each(function() {
+    //         var currAmount = $(this).find("td").eq(3).html();
+    //         var currParticle = $(this).find("td").eq(2).html();
+    //         var coords = $(this).attr("coordinates");
+	//
+    //         if (particleValue == 'Default') {
+    //             if (amountValue > currAmount) {
+    //                 $(this).hide();
+    //                 //Get matching marker and hide from map
+    //                 hideMarkers(cords);
+    //             }
+    //         } else if ((particleValue != currParticle) ||((particleValue == currParticle) && (amountValue > currAmount))) {
+    //             $(this).hide();
+    //             //Get matching marker and hide from map
+    //             hideMarkers(coords);
+    //         }
+    //     });
+    // }
 });
