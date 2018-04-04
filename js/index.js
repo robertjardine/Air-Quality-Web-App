@@ -40,7 +40,7 @@ indexApp.controller('IndexController', function PhoneListController($scope) {
 
         $scope.geocoder = new google.maps.Geocoder;
 
-        $scope.map.addListener('dragend', function() {
+        $scope.map.addListener('idle', function() {
             var lat = $scope.map.getCenter().lat();
             var lng = $scope.map.getCenter().lng();
             var latlng = {lat: lat, lng: lng};
@@ -57,6 +57,10 @@ indexApp.controller('IndexController', function PhoneListController($scope) {
                 }
             });
         });
+
+        /*$scope.map.addListener('zoom_changed', function() {
+            var stuff = 1;
+        });*/
         // var marker = new google.maps.Marker({
         //     position: uluru,
         //     map: map
