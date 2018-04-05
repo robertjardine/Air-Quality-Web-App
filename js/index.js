@@ -238,9 +238,29 @@ indexApp.controller('IndexController', function PhoneListController($scope) {
 
             var curr =
                 new google.maps.Marker({
-                    map: $scope.map,
-                    position: latlng
+				   	map: $scope.map,
+				   	position: latlng,
+				   	title: "Lat: " + lat + ", Lng: " + lng
                 });
+            var currInfo = "";
+            var currMeasurements = results[i].measurements;
+            for (var j=0; j<currMeasurements.length; j++) {
+				currInfo += "<p>" +
+								currMeasurements[j].parameter + ": " +
+								currMeasurements[j].value + " " +
+								currMeasurements[j].unit +
+							"</p>" +
+							"<hr/>";
+			}
+			curr.info = new google.maps.InfoWindow({
+			 	content: currInfo
+		 	});
+			google.maps.event.addListener(curr, 'mouseover', function() {
+				this.info.open($scope.map, this);
+			});
+			google.maps.event.addListener(curr, 'mouseout', function() {
+				this.info.close();
+			});
             if (markers.indexOf(curr) === -1) {
                 markers.push(curr);
             }
