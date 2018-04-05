@@ -4,7 +4,9 @@
         <meta charset="UTF-8">
         <title>Air Quality Map</title>
         <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+        <link href = "https://code.jquery.com/ui/1.10.4/themes/ui-lightness/jquery-ui.css" rel = "stylesheet">
         <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+        <script   src="https://code.jquery.com/ui/1.11.3/jquery-ui.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
         <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
         <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.9/angular.min.js"></script>
@@ -41,10 +43,14 @@
                                 <th>Greater Than / Less Than</th>
                                 <th>Value</th>
                             </thead>
-                            <tbody id="filter-body">
-                                <tr><button type="button" class="btn btn-dark" ng-click="submitRequest()">Submit Filter</button></tr>
-                            </tbody>
+                            <tbody id="filter-body"></tbody>
                         </table>
+                        <button type="button" class="btn btn-dark" ng-click="submitRequest(false)">Submit Filter</button>
+                        <div id="calendars" style="margin: auto">
+                            <span><div id="calendar-start" style="display: inline-block"></div></span>
+                            <span><div id="calendar-end" style="display: inline-block"></div></span>
+                        </div>
+                        <button type="button" class="btn btn-dark" ng-click="submitRequest(true)">Submit Historical Data</button>
 
                         <table id="air-data" class="table table-striped dynamicTable">
                             <thead>
@@ -76,7 +82,10 @@
                     </div>
                 </div>
             </div>
-            <script>initFilterBody();</script>
+            <script>
+                initFilterBody();
+                initCalendar();
+            </script>
         </div>
     </body>
 </html>

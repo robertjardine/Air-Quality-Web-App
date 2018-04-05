@@ -48,7 +48,7 @@ indexApp.controller('IndexController', function PhoneListController($scope) {
                 if (status === 'OK') {
                     if (results[0]) {
                         document.getElementById('pac-input').value=results[0].formatted_address;
-                        $scope.airQualityRequest(lat + "," + lng);
+                        $scope.airQualityRequest(lat + "," + lng, false);
                     } else {
                         window.alert('No results found');
                     }
@@ -126,40 +126,52 @@ indexApp.controller('IndexController', function PhoneListController($scope) {
             });
             $scope.map.fitBounds(bounds);
             //this is where the coordinates need to be obtained and passed
-            $scope.airQualityRequest(places[0].geometry.location.lat() + ',' + places[0].geometry.location.lng());
+            $scope.airQualityRequest(places[0].geometry.location.lat() + ',' + places[0].geometry.location.lng(), false);
         });
     };
 
-    $scope.airQualityRequest = function (coordinates) {
-        //$scope.map.getCenter().lat();
-        var bounds = $scope.map.getBounds();
-        var NE = bounds.getNorthEast();
-        var SW = bounds.getSouthWest();
-        var distance = google.maps.geometry.spherical.computeDistanceBetween (NE, SW);
-        var filter = getFilterInfo();
-        send = {
-            coordinates: coordinates,
-            radius: distance/2
-        };
-        $.ajax({
-            url: 'https://api.openaq.org/v1/latest',
-            data: send,
-            type: 'GET',
-            cache: false,
-            contentType: "application/json; charset=utf-8",
-            success: function (data) {
-				if (filter !== []) {
-					data = filterData(data, filter);
-				}
-                $scope.airQuality = data.results;
-                $scope.$apply();
-                placeMarkers($scope.airQuality);
-            },
-            error: function () {
-                alert('error');
-            }
-        });
+    $scope.airQualityRequest = function (coordinates, historical) {
+			//$scope.map.getCenter().lat();
+			var bounds = $scope.map.getBounds();
+			var NE = bounds.getNorthEast();
+			var SW = bounds.getSouthWest();
+			var distance = google.maps.geometry.spherical.computeDistanceBetween (NE, SW);
+			var filter = getFilterInfo();
+			// Clear out the old markers.
+			markers.forEach(function (marker) {
+				marker.setMap(null);
+			});
+			markers = [];
+			send = {
+				coordinates: coordinates,
+				radius: distance/2
+			};
+			$.ajax({
+			   url: 'https://api.openaq.org/v1/latest',
+			   data: send,
+			   type: 'GET',
+			   cache: false,
+			   contentType: "application/json; charset=utf-8",
+			   success: function (data) {
+				   var newData = JSON.parse(JSON.stringify(data));
+				   if (filter.length > 0) {
+					   newData = filterData(newData, filter);
+				   }
+				   $scope.airQuality = newData.results;
+				   $scope.$apply();
+				   placeMarkers($scope.airQuality);
+			   },
+			   error: function () {
+				   alert('error: request failed');
+			   }
+		   	});
     };
+
+	$scope.submitRequest = function (historical) {
+		var lat = $scope.map.getCenter().lat();
+		var lng = $scope.map.getCenter().lng();
+		$scope.airQualityRequest(lat + "," + lng, historical);
+	};
 
     function getFilterInfo() {
 		const tags = ['default', 'co', 'no2', 'o3', 'pm10', 'pm25', 'so2'];
@@ -167,9 +179,10 @@ indexApp.controller('IndexController', function PhoneListController($scope) {
 		for (var i=0; i<tags.length; i++) {
 			var item = {};
 			if ($('#' + tags[i])[0].checked) {
-				item.name = tags[i];
-				item.comparator = $("#" + tags[i] + "select").value;
-				item.amount = $("#" + tags[i] + "amount").value;
+				item["name"] = tags[i];
+				var index = $('#' + tags[i] + 'select')[0].selectedIndex;
+				item["comparator"] = $('#' + tags[i] + 'select')[0].options[index].innerHTML;
+				item["amount"] = $('#' + tags[i] + 'amount').val();
 				filter.push(item);
 			}
 		}
@@ -207,7 +220,11 @@ indexApp.controller('IndexController', function PhoneListController($scope) {
 				}
 			}
 
-			results[i].measurements = tempMeasure;
+			if (tempMeasure.length === 0) {
+				results[i] = null;
+			} else {
+				results[i].measurements = tempMeasure;
+			}
 		}
 		temp.results = results;
     	return temp;
@@ -230,11 +247,6 @@ indexApp.controller('IndexController', function PhoneListController($scope) {
         }
     }
 
-	$scope.submitRequest = function () {
-		var lat = $scope.map.getCenter().lat();
-		var lng = $scope.map.getCenter().lng();
-		$scope.airQualityRequest(lat + "," + lng);
-	}
 });
 
 function initFilterBody() {
@@ -249,16 +261,34 @@ function initFilterBody() {
 					"</div>" +
 				"</td>" +
 				"<td>" +
-					"<select id=" + tags[i] + "select'>" +
+					"<select id='" + tags[i] + "select'>" +
 						"<option selected>Default</option>" +
 						"<option>Greater Than</option>" +
 						"<option>Less Than</option>" +
 					"</select>" +
 				"</td>" +
 				"<td>" +
-					"<input type='text' id='" + tags[i] + "amount'/>" +
+					"<input type='text' id='" + tags[i] + "amount' placeholder='Default input'>" +
 				"</td>" +
 			"</tr>";
 		$("#filter-body").append(checkBox);
 	}
+}
+
+function initCalendar() {
+	 var date = new Date();
+	 var month = date.getMonth();
+	 var currDate = date.getDate();
+	 var year = date.getFullYear();
+	 $('#calendar-end').datepicker({});
+	 $('#calendar-end').datepicker('disable');
+	 $('#calendar-start').datepicker({
+		minDate: new Date(year, month-3, currDate),
+		maxDate: new Date(),
+	  	onSelect: function(selectedDate) {
+			$('#calendar-end').datepicker('option', 'minDate', selectedDate);
+			$('#calendar-end').datepicker('option', 'maxDate', new Date());
+			$('#calendar-end').datepicker('enable');
+		 }
+	 });
 }
