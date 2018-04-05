@@ -1,7 +1,6 @@
 var indexApp = angular.module('indexApp', []);
 
 var markers = [];
-var hiddenMarkers = [];
 
 indexApp.controller('IndexController', function PhoneListController($scope) {
     $scope.bounds = function(npad,spad,wpad,epad) {
@@ -137,6 +136,7 @@ indexApp.controller('IndexController', function PhoneListController($scope) {
         var NE = bounds.getNorthEast();
         var SW = bounds.getSouthWest();
         var distance = google.maps.geometry.spherical.computeDistanceBetween (NE, SW);
+        var filter = getFilterInfo();
         send = {
             coordinates: coordinates,
             radius: distance/2
@@ -148,6 +148,9 @@ indexApp.controller('IndexController', function PhoneListController($scope) {
             cache: false,
             contentType: "application/json; charset=utf-8",
             success: function (data) {
+				if (filter !== []) {
+					data = filterData(data, filter);
+				}
                 $scope.airQuality = data.results;
                 $scope.$apply();
                 placeMarkers($scope.airQuality);
@@ -157,6 +160,57 @@ indexApp.controller('IndexController', function PhoneListController($scope) {
             }
         });
     };
+
+    function getFilterInfo() {
+		const tags = ['default', 'co', 'no2', 'o3', 'pm10', 'pm25', 'so2'];
+    	var filter= [];
+		for (var i=0; i<tags.length; i++) {
+			var item = {};
+			if ($('#' + tags[i])[0].checked) {
+				item.name = tags[i];
+				item.comparator = $("#" + tags[i] + "select").value;
+				item.amount = $("#" + tags[i] + "amount").value;
+				filter.push(item);
+			}
+		}
+		return filter;
+	}
+
+    function filterData(data, filter) {
+		var filterNames = [];
+    	for (var k=0; k<filter.length; k++) {
+			filterNames.push(filter[k].name);
+		}
+
+    	var temp = data;
+    	var filteredResults = data.results;
+    	var results = data.results;
+		for (var i=0; i<filteredResults.length; i++) {
+			var measurements = filteredResults[i].measurements;
+			var tempMeasure = filteredResults[i].measurements;
+			for (var j=0; j<measurements.length; j++) {
+				var filterIndex = filterNames.indexOf(measurements[j].parameter);
+				if (filterIndex !== -1) {
+
+					if (filter[filterIndex].comparator === 'Greater Than') {
+						if (measurements[i].value < filter[filterIndex].amount) {
+							tempMeasure = tempMeasure.splice(tempMeasure.indexOf(measurements[i]), 1);
+						}
+					} else if (filter[filterIndex].comparator === 'Less Than') {
+						if (measurements[i].value > filter[filterIndex].amount) {
+							tempMeasure = tempMeasure.splice(tempMeasure.indexOf(measurements[i]), 1);
+						}
+					}
+				} else {
+					//remove measurement
+					tempMeasure = tempMeasure.splice(tempMeasure.indexOf(measurements[i]), 1);
+				}
+			}
+
+			results[i].measurements = tempMeasure;
+		}
+    	return temp;
+	}
 
     function placeMarkers(results) {
         for (var i=0; i<results.length; i++) {
@@ -175,33 +229,35 @@ indexApp.controller('IndexController', function PhoneListController($scope) {
         }
     }
 
-    // //Filter when a new option is selected
-    // $("#particle").change(filterParticle);
-    // $("#amount").bind('input', filterParticle);
-	//
-    // function filterParticle() {
-    //     var amountValue = $("#amount").val();
-    //     amountValue = (amountValue || !isNaN(amountValue)) ? amountValue : 0;
-    //     var particleValue = $("#particle").val();
-	//
-    //     $("#air-body > tr").show();
-    //     showMarkers();
-    //     $("#air-body > tr").each(function() {
-    //         var currAmount = $(this).find("td").eq(3).html();
-    //         var currParticle = $(this).find("td").eq(2).html();
-    //         var coords = $(this).attr("coordinates");
-	//
-    //         if (particleValue == 'Default') {
-    //             if (amountValue > currAmount) {
-    //                 $(this).hide();
-    //                 //Get matching marker and hide from map
-    //                 hideMarkers(cords);
-    //             }
-    //         } else if ((particleValue != currParticle) ||((particleValue == currParticle) && (amountValue > currAmount))) {
-    //             $(this).hide();
-    //             //Get matching marker and hide from map
-    //             hideMarkers(coords);
-    //         }
-    //     });
-    // }
+	$scope.submitRequest = function () {
+		var lat = $scope.map.getCenter().lat();
+		var lng = $scope.map.getCenter().lng();
+		$scope.airQualityRequest(lat + "," + lng);
+	}
 });
+
+function initFilterBody() {
+	const tags = ['default', 'co', 'no2', 'o3', 'pm10', 'pm25', 'so2'];
+	for (var i=0; i<tags.length; i++) {
+		var checkBox =
+			"<tr>" +
+				"<td>" +
+					"<div class='form-check'>" +
+						"<input type='checkbox' class='form-check-input' id=" + tags[i] + ">" +
+						"<label class='form-check-label' for=" + tags[i] + ">" + tags[i] + "</label>" +
+					"</div>" +
+				"</td>" +
+				"<td>" +
+					"<select id=" + tags[i] + "select'>" +
+						"<option selected>Default</option>" +
+						"<option>Greater Than</option>" +
+						"<option>Less Than</option>" +
+					"</select>" +
+				"</td>" +
+				"<td>" +
+					"<input type='text' id=" + tags[i] + "amount'/>" +
+				"</td>" +
+			"</tr>";
+		$("#filter-body").append(checkBox);
+	}
+}

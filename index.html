@@ -34,37 +34,23 @@
                     <div class="col-sm text-center">
                         <div id="map" data-ng-init="init()"></div>
                         <input id="pac-input" class="controls" type="text" placeholder="Search Box" ng-init="initSearchBox()">
+
                         <table class="table table-striped dynamicTable" id="map-input">
                             <thead>
                                 <th>Particle Type</th>
-                                <th>Minimum Amount</th>
-                                <th>Submit </th>
+                                <th>Greater Than / Less Than</th>
+                                <th>Value</th>
                             </thead>
-                            <tbody>
-                                <tr>
-                                    <td>
-                                        <div class="form-group">
-                                            <select class="form-control" id="particle">
-                                                <option selected>Default</option>
-                                                <option>bc</option>
-                                                <option>co</option>
-                                                <option>no2</option>
-                                                <option>o3</option>
-                                                <option>pm10</option>
-                                                <option>pm25</option>
-                                                <option>so2</option>
-                                            </select>
-                                        </div>
-                                    </td>
-                                    <td><input type="text" id="amount"/></td>
-                                </tr>
+                            <tbody id="filter-body">
+                                <tr><button type="button" class="btn btn-dark" ng-click="submitRequest()">Submit Filter</button></tr>
                             </tbody>
                         </table>
+
                         <table id="air-data" class="table table-striped dynamicTable">
                             <thead>
                                 <th>Location</th>
                                 <th>Date</th>
-                                <th>Chemical</th>
+                                <th>Particle</th>
                                 <th>Value</th>
                                 <th>Unit</th>
                             </thead>
@@ -90,6 +76,7 @@
                     </div>
                 </div>
             </div>
+            <script>initFilterBody();</script>
         </div>
     </body>
 </html>
