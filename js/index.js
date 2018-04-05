@@ -187,28 +187,29 @@ indexApp.controller('IndexController', function PhoneListController($scope) {
     	var results = data.results;
 		for (var i=0; i<filteredResults.length; i++) {
 			var measurements = filteredResults[i].measurements;
-			var tempMeasure = filteredResults[i].measurements;
+			var tempMeasure = measurements.slice();
 			for (var j=0; j<measurements.length; j++) {
 				var filterIndex = filterNames.indexOf(measurements[j].parameter);
 				if (filterIndex !== -1) {
 
 					if (filter[filterIndex].comparator === 'Greater Than') {
-						if (measurements[i].value < filter[filterIndex].amount) {
-							tempMeasure = tempMeasure.splice(tempMeasure.indexOf(measurements[i]), 1);
+						if (measurements[j].value < filter[filterIndex].amount) {
+							tempMeasure.splice(tempMeasure.indexOf(measurements[j]), 1);
 						}
 					} else if (filter[filterIndex].comparator === 'Less Than') {
-						if (measurements[i].value > filter[filterIndex].amount) {
-							tempMeasure = tempMeasure.splice(tempMeasure.indexOf(measurements[i]), 1);
+						if (measurements[j].value > filter[filterIndex].amount) {
+							tempMeasure.splice(tempMeasure.indexOf(measurements[j]), 1);
 						}
 					}
 				} else {
 					//remove measurement
-					tempMeasure = tempMeasure.splice(tempMeasure.indexOf(measurements[i]), 1);
+					tempMeasure.splice(tempMeasure.indexOf(measurements[j]), 1);
 				}
 			}
 
 			results[i].measurements = tempMeasure;
 		}
+		temp.results = results;
     	return temp;
 	}
 
@@ -255,7 +256,7 @@ function initFilterBody() {
 					"</select>" +
 				"</td>" +
 				"<td>" +
-					"<input type='text' id=" + tags[i] + "amount'/>" +
+					"<input type='text' id='" + tags[i] + "amount'/>" +
 				"</td>" +
 			"</tr>";
 		$("#filter-body").append(checkBox);
