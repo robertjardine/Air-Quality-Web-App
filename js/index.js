@@ -154,9 +154,7 @@ indexApp.controller('IndexController', function PhoneListController($scope) {
 			   contentType: "application/json; charset=utf-8",
 			   success: function (data) {
 				   var newData = JSON.parse(JSON.stringify(data));
-				   if (filter.length > 0) {
-					   newData = filterData(newData, filter);
-				   }
+				   newData = filterData(newData, filter);
 				   $scope.airQuality = newData.results;
 				   $scope.$apply();
 				   placeMarkers($scope.airQuality);
@@ -174,7 +172,7 @@ indexApp.controller('IndexController', function PhoneListController($scope) {
 	};
 
     function getFilterInfo() {
-		const tags = ['default', 'co', 'no2', 'o3', 'pm10', 'pm25', 'so2'];
+		const tags = ['co', 'no2', 'o3', 'pm10', 'pm25', 'so2'];
     	var filter= [];
 		for (var i=0; i<tags.length; i++) {
 			var item = {};
@@ -210,7 +208,7 @@ indexApp.controller('IndexController', function PhoneListController($scope) {
 							tempMeasure.splice(tempMeasure.indexOf(measurements[j]), 1);
 						}
 					} else if (filter[filterIndex].comparator === 'Less Than') {
-						if (measurements[j].value > filter[filterIndex].amount) {
+						if (measurements[j].value >= filter[filterIndex].amount) {
 							tempMeasure.splice(tempMeasure.indexOf(measurements[j]), 1);
 						}
 					}
@@ -270,28 +268,46 @@ indexApp.controller('IndexController', function PhoneListController($scope) {
 });
 
 function initFilterBody() {
-	const tags = ['default', 'co', 'no2', 'o3', 'pm10', 'pm25', 'so2'];
+	const tags = ['co', 'no2', 'o3', 'pm10', 'pm25', 'so2'];
 	for (var i=0; i<tags.length; i++) {
 		var checkBox =
 			"<tr>" +
 				"<td>" +
 					"<div class='form-check'>" +
-						"<input type='checkbox' class='form-check-input' id=" + tags[i] + ">" +
+						"<input type='checkbox' class='form-check-input' checked id=" + tags[i] + " onchange='enableSelect(this)'>" +
 						"<label class='form-check-label' for=" + tags[i] + ">" + tags[i] + "</label>" +
 					"</div>" +
 				"</td>" +
 				"<td>" +
-					"<select id='" + tags[i] + "select'>" +
+					"<select id='" + tags[i] + "select' onchange='enableAmount(this)'>" +
 						"<option selected>Default</option>" +
 						"<option>Greater Than</option>" +
 						"<option>Less Than</option>" +
 					"</select>" +
 				"</td>" +
 				"<td>" +
-					"<input type='text' id='" + tags[i] + "amount' placeholder='Default input'>" +
+					"<input type='text' id='" + tags[i] + "amount' value='0' disabled>" +
 				"</td>" +
 			"</tr>";
 		$("#filter-body").append(checkBox);
+	}
+}
+
+function enableSelect(el) {
+	if(el.checked) {
+		$('#' + el.id + 'select').prop("disabled", false);
+	} else {
+		$('#' + el.id + 'select').prop("disabled", true);
+	}
+}
+
+function enableAmount(el) {
+	var amountEl = el.id.substring(0, el.id.indexOf("select"));
+	amountEl += 'amount';
+	if (el.selectedIndex > 0) {
+		$('#' + amountEl).prop("disabled", false);
+	} else {
+		$('#' + amountEl).prop("disabled", true);
 	}
 }
 
