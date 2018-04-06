@@ -151,7 +151,7 @@ indexApp.controller('IndexController', function PhoneListController($scope) {
                 //date_to: $("#calendar-end").val()
             };
         }
-        if($scope.isLatest) {
+        //if($scope.isLatest) {
             $.ajax({
                 url: url,
                 data: send,
@@ -169,13 +169,13 @@ indexApp.controller('IndexController', function PhoneListController($scope) {
                     alert('error: request failed, sorry, but the https://docs.openaq.org/#api-Measurements api is a dumpster fire. Please turn off the history filter.');
                 }
             });
-        } else {
+        /*} else {
             var input = "{\"results\":[{\"location\":\"St Marys\",\"parameter\":\"pm25\",\"date\":{\"utc\":\"2018-04-05T00:00:00.000Z\",\"local\":\"2018-04-05T10:00:00+10:00\"},\"value\":5.3,\"unit\":\"µg/m³\",\"coordinates\":{\"latitude\":-33.7972222,\"longitude\":150.7658333},\"country\":\"AU\",\"city\":\"Sydney North-west\"},{\"location\":\"Bathurst\",\"parameter\":\"pm10\",\"date\":{\"utc\":\"2018-04-05T00:00:00.000Z\",\"local\":\"2018-04-05T10:00:00+10:00\"},\"value\":17.9,\"unit\":\"µg/m³\",\"coordinates\":{\"latitude\":-33.4033333,\"longitude\":149.5733333},\"country\":\"AU\",\"city\":\"Central Tablelands\"}]}";
             var newData = JSON.parse(input);
             newData = filterData(newData, filter);
             $scope.airQuality = newData.results;
             $scope.placeMarkers($scope.airQuality);
-        }
+        }*/
     };
 
 	$scope.submitRequest = function () {
