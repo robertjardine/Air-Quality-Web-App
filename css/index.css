@@ -108,3 +108,11 @@ hr {
 .dynamicTable {
     background-color: white;
 }
+
+#calendars {
+    margin: auto;
+}
+
+#calendar-start, #calendar-end {
+    display: inline-block;
+}
