@@ -1,8 +1,13 @@
-body {
+#index-body {
     background-image:url('../images/table.jpg');
     background-attachment:fixed;
     background-repeat: no-repeat;
     background-size: cover;
+}
+
+#about-body {
+    background-color: black;
+    color: white;
 }
 
 #map {
@@ -84,6 +89,10 @@ body {
     width: 345px;
 }
 
+h3 {
+    text-align: center;
+}
+
 blockquote {
     margin: auto;
 }
@@ -115,4 +124,9 @@ hr {
 
 #calendar-start, #calendar-end {
     display: inline-block;
+}
+
+iframe {
+    margin: auto;
+    display:block;
 }
