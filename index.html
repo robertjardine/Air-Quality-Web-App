@@ -35,12 +35,12 @@
             <div class="container-fluid">
                 <div class="row justify-content-center">
                     <div class="col-sm text-center">
-                        <div id="map" data-ng-init="init()"></div>
+                        <div id="map" data-ng-init="init()">
+                        </div>
                         <input id="pac-input" class="controls" type="text" placeholder="Search Box" ng-init="initSearchBox()">
                         <br>
                         <button type="button" class="btn" ng-click="toggleHeatmap()">ENABLE HEAT MAP</button>
-                        <img src="images/legend.png"/>
-                        <br>
+                        <br><br/>
                         <table class="table table-striped dynamicTable" id="map-input">
                             <thead>
                                 <th>Particle Type</th>
@@ -50,12 +50,14 @@
                             <tbody id="filter-body"></tbody>
                         </table>
                         <button type="button" class="btn btn-dark" ng-click="submitRequest()">Submit Filter</button>
+                        <br/><br/>
                         <div id="calendars" style="">
                             <span><div id="calendar-start"></div></span>
                             <span><div id="calendar-end"></div></span>
                         </div>
+                        <br/>
                         <button type="button" class="btn btn-dark" ng-click="submitRequest()">Submit Historical Data</button>
-
+                        <br/><br/>
                         <table id="air-data" class="table table-striped dynamicTable">
                             <thead>
                                 <th>Location</th>

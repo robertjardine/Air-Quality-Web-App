@@ -42,6 +42,8 @@ indexApp.controller('IndexController', function PhoneListController($scope) {
             });
         });
 
+        $("#map").append("<img id='legend' src='images/legend.png'/>");
+
         /*$scope.map.addListener('zoom_changed', function() {
             var stuff = 1;
         });*/
