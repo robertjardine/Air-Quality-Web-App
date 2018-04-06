@@ -47,9 +47,12 @@
     z-index: 2147483647 !important;
 }
 
-#pac-container {
+.pac-container {
     padding-bottom: 12px;
     margin-right: 12px;
+}
+
+.pac-container, .pac-item{
     z-index: 2147483647 !important;
 }
 
