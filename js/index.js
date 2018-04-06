@@ -3,32 +3,16 @@ var indexApp = angular.module('indexApp', []);
 var markers = [];
 
 indexApp.controller('IndexController', function PhoneListController($scope) {
-    $scope.bounds = function(npad,spad,wpad,epad) {
-        //I don't think we need this function
-        var SW = $scope.map.getBounds().getSouthWest();
-        var NE = $scope.map.getBounds().getNorthEast();
-        var topRight = $scope.map.getProjection().fromLatLngToPoint(NE);
-        var bottomLeft = $scope.map.getProjection().fromLatLngToPoint(SW);
-        var scale = Math.pow(2, $scope.map.getZoom());
-
-        var SWtopoint = $scope.map.getProjection().fromLatLngToPoint(SW);
-        var SWpoint = new google.maps.Point(((SWtopoint.x - bottomLeft.x) * scale) + wpad, ((SWtopoint.y - topRight.y) * scale) - spad);
-        var SWworld = new google.maps.Point(SWpoint.x / scale + bottomLeft.x, SWpoint.y / scale + topRight.y);
-        var pt1 = $scope.map.getProjection().fromPointToLatLng(SWworld);
-
-        var NEtopoint = $scope.map.getProjection().fromLatLngToPoint(NE);
-        var NEpoint = new google.maps.Point(((NEtopoint.x - bottomLeft.x) * scale) - epad, ((NEtopoint.y - topRight.y) * scale) + npad);
-        var NEworld = new google.maps.Point(NEpoint.x / scale + bottomLeft.x, NEpoint.y / scale + topRight.y);
-        var pt2 = $scope.map.getProjection().fromPointToLatLng(NEworld);
-
-        return new google.maps.LatLngBounds(pt1, pt2);
-    };
 
     $scope.map;
 
     $scope.geocoder;
 
     $scope.searchBox;
+
+    $scope.isLatest;
+
+    $scope.pointsArray = [];
 
     $scope.init = function() {
         var uluru = {lat: -34.397, lng: 150.644};
@@ -48,7 +32,7 @@ indexApp.controller('IndexController', function PhoneListController($scope) {
                 if (status === 'OK') {
                     if (results[0]) {
                         document.getElementById('pac-input').value=results[0].formatted_address;
-                        $scope.airQualityRequest(lat + "," + lng, false);
+                        $scope.airQualityRequest(lat + "," + lng);
                     } else {
                         window.alert('No results found');
                     }
@@ -88,12 +72,6 @@ indexApp.controller('IndexController', function PhoneListController($scope) {
                 return;
             }
 
-            // Clear out the old markers.
-            markers.forEach(function (marker) {
-                marker.setMap(null);
-            });
-            markers = [];
-
             //For each place, get the icon, name and location.
             var bounds = new google.maps.LatLngBounds();
             places.forEach(function (place) {
@@ -101,7 +79,7 @@ indexApp.controller('IndexController', function PhoneListController($scope) {
                     console.log("Returned place contains no geometry");
                     return;
                 }
-                var icon = {
+                /*var icon = {
                     url: place.icon,
                     size: new google.maps.Size(71, 71),
                     origin: new google.maps.Point(0, 0),
@@ -115,7 +93,7 @@ indexApp.controller('IndexController', function PhoneListController($scope) {
                     icon: icon,
                     title: place.name,
                     position: place.geometry.location
-                }));
+                }));*/
 
                 if (place.geometry.viewport) {
                     // Only geocodes have viewport.
@@ -126,49 +104,82 @@ indexApp.controller('IndexController', function PhoneListController($scope) {
             });
             $scope.map.fitBounds(bounds);
             //this is where the coordinates need to be obtained and passed
-            $scope.airQualityRequest(places[0].geometry.location.lat() + ',' + places[0].geometry.location.lng(), false);
+            $scope.airQualityRequest(places[0].geometry.location.lat() + ',' + places[0].geometry.location.lng());
         });
     };
 
-    $scope.airQualityRequest = function (coordinates, historical) {
-			//$scope.map.getCenter().lat();
-			var bounds = $scope.map.getBounds();
-			var NE = bounds.getNorthEast();
-			var SW = bounds.getSouthWest();
-			var distance = google.maps.geometry.spherical.computeDistanceBetween (NE, SW);
-			var filter = getFilterInfo();
-			// Clear out the old markers.
-			markers.forEach(function (marker) {
-				marker.setMap(null);
-			});
-			markers = [];
-			send = {
-				coordinates: coordinates,
-				radius: distance/2
-			};
-			$.ajax({
-			   url: 'https://api.openaq.org/v1/latest',
-			   data: send,
-			   type: 'GET',
-			   cache: false,
-			   contentType: "application/json; charset=utf-8",
-			   success: function (data) {
-				   var newData = JSON.parse(JSON.stringify(data));
-				   newData = filterData(newData, filter);
-				   $scope.airQuality = newData.results;
-				   $scope.$apply();
-				   placeMarkers($scope.airQuality);
-			   },
-			   error: function () {
-				   alert('error: request failed');
-			   }
-		   	});
+    $scope.airQualityRequest = function (coordinates) {
+        // Clear out the old markers.
+        markers.forEach(function (marker) {
+            marker.setMap(null);
+        });
+        markers = [];
+
+        if($scope.markerCluster !== undefined) {
+            // Clears all clusters and markers from the clusterer.
+            $scope.markerCluster.clearMarkers();
+        }
+
+        $scope.pointsArray = [];
+
+        $scope.isLatest = $scope.checkIfLatest();
+
+        var bounds = $scope.map.getBounds();
+        var NE = bounds.getNorthEast();
+        var SW = bounds.getSouthWest();
+        var distance = google.maps.geometry.spherical.computeDistanceBetween (NE, SW);
+        var filter = getFilterInfo();
+        var url;
+        var send;
+
+        if($scope.isLatest) {
+            url = 'https://api.openaq.org/v1/latest';
+            send = {
+                coordinates: coordinates,
+                radius: distance/2,
+                limit: 10000
+            };
+        } else {
+            url = 'https://api.openaq.org/v1/measurements?date_from='+$("#calendar-start").val()+"&date_to="+$("#calendar-end").val();
+            send = {
+                coordinates: coordinates,
+                radius: distance/2,
+                limit: 10000
+                //date_from: $("#calendar-start").val(),
+                //date_to: $("#calendar-end").val()
+            };
+        }
+        if($scope.isLatest) {
+            $.ajax({
+                url: url,
+                data: send,
+                type: 'GET',
+                cache: false,
+                contentType: "application/json; charset=utf-8",
+                success: function (data) {
+                    var newData = JSON.parse(JSON.stringify(data));
+                    newData = filterData(newData, filter);
+                    $scope.airQuality = newData.results;
+                    $scope.$apply();
+                    $scope.placeMarkers($scope.airQuality);
+                },
+                error: function (error) {
+                    alert('error: request failed, sorry, but the https://docs.openaq.org/#api-Measurements api is a dumpster fire. Please turn off the history filter.');
+                }
+            });
+        } else {
+            var input = "{\"results\":[{\"location\":\"St Marys\",\"parameter\":\"pm25\",\"date\":{\"utc\":\"2018-04-05T00:00:00.000Z\",\"local\":\"2018-04-05T10:00:00+10:00\"},\"value\":5.3,\"unit\":\"µg/m³\",\"coordinates\":{\"latitude\":-33.7972222,\"longitude\":150.7658333},\"country\":\"AU\",\"city\":\"Sydney North-west\"},{\"location\":\"Bathurst\",\"parameter\":\"pm10\",\"date\":{\"utc\":\"2018-04-05T00:00:00.000Z\",\"local\":\"2018-04-05T10:00:00+10:00\"},\"value\":17.9,\"unit\":\"µg/m³\",\"coordinates\":{\"latitude\":-33.4033333,\"longitude\":149.5733333},\"country\":\"AU\",\"city\":\"Central Tablelands\"}]}";
+            var newData = JSON.parse(input);
+            newData = filterData(newData, filter);
+            $scope.airQuality = newData.results;
+            $scope.placeMarkers($scope.airQuality);
+        }
     };
 
-	$scope.submitRequest = function (historical) {
+	$scope.submitRequest = function () {
 		var lat = $scope.map.getCenter().lat();
 		var lng = $scope.map.getCenter().lng();
-		$scope.airQualityRequest(lat + "," + lng, historical);
+		$scope.airQualityRequest(lat + "," + lng);
 	};
 
     function getFilterInfo() {
@@ -188,83 +199,162 @@ indexApp.controller('IndexController', function PhoneListController($scope) {
 	}
 
     function filterData(data, filter) {
-		var filterNames = [];
-    	for (var k=0; k<filter.length; k++) {
-			filterNames.push(filter[k].name);
-		}
+        var filterNames = [];
+        for (var k=0; k<filter.length; k++) {
+            filterNames.push(filter[k].name);
+        }
 
-    	var temp = data;
-    	var filteredResults = data.results;
-    	var results = data.results;
-		for (var i=0; i<filteredResults.length; i++) {
-			var measurements = filteredResults[i].measurements;
-			var tempMeasure = measurements.slice();
-			for (var j=0; j<measurements.length; j++) {
-				var filterIndex = filterNames.indexOf(measurements[j].parameter);
-				if (filterIndex !== -1) {
+        var temp = data;
+        var filteredResults = data.results;
+        var results = data.results;
+        if($scope.isLatest) {
+            for (var i = 0; i < filteredResults.length; i++) {
+                var measurements = filteredResults[i].measurements;
+                var tempMeasure = measurements.slice();
+                for (var j = 0; j < measurements.length; j++) {
+                    var filterIndex = filterNames.indexOf(measurements[j].parameter);
+                    if (filterIndex !== -1) {
 
-					if (filter[filterIndex].comparator === 'Greater Than') {
-						if (measurements[j].value < filter[filterIndex].amount) {
-							tempMeasure.splice(tempMeasure.indexOf(measurements[j]), 1);
-						}
-					} else if (filter[filterIndex].comparator === 'Less Than') {
-						if (measurements[j].value >= filter[filterIndex].amount) {
-							tempMeasure.splice(tempMeasure.indexOf(measurements[j]), 1);
-						}
-					}
-				} else {
-					//remove measurement
-					tempMeasure.splice(tempMeasure.indexOf(measurements[j]), 1);
-				}
-			}
+                        if (filter[filterIndex].comparator === 'Greater Than') {
+                            if (measurements[j].value < filter[filterIndex].amount) {
+                                tempMeasure.splice(tempMeasure.indexOf(measurements[j]), 1);
+                            }
+                        } else if (filter[filterIndex].comparator === 'Less Than') {
+                            if (measurements[j].value > filter[filterIndex].amount) {
+                                tempMeasure.splice(tempMeasure.indexOf(measurements[j]), 1);
+                            }
+                        }
+                    } else {
+                        //remove measurement
+                        tempMeasure.splice(tempMeasure.indexOf(measurements[j]), 1);
+                    }
+                }
 
-			if (tempMeasure.length === 0) {
-				results[i] = null;
-			} else {
-				results[i].measurements = tempMeasure;
-			}
-		}
-		temp.results = results;
-    	return temp;
-	}
+                if (tempMeasure.length === 0) {
+                    results[i] = null;
+                } else {
+                    results[i].measurements = tempMeasure;
+                }
+            }
+        } else {
+            var tempMeasure = filteredResults.slice();
+            for (var i = 0; i < filteredResults.length; i++) {
+                var filterIndex = filterNames.indexOf(filteredResults[i].parameter);
+                if (filterIndex !== -1) {
 
-    function placeMarkers(results) {
-        for (var i=0; i<results.length; i++) {
-			var lat = results[i].coordinates.latitude;
-			var lng = results[i].coordinates.longitude;
-			var latlng = new google.maps.LatLng(parseFloat(lat),parseFloat(lng));
-
-            var curr =
-                new google.maps.Marker({
-				   	map: $scope.map,
-				   	position: latlng,
-				   	title: "Lat: " + lat + ", Lng: " + lng
-                });
-            var currInfo = "";
-            var currMeasurements = results[i].measurements;
-            for (var j=0; j<currMeasurements.length; j++) {
-				currInfo += "<p>" +
-								currMeasurements[j].parameter + ": " +
-								currMeasurements[j].value + " " +
-								currMeasurements[j].unit +
-							"</p>" +
-							"<hr/>";
-			}
-			curr.info = new google.maps.InfoWindow({
-			 	content: currInfo
-		 	});
-			google.maps.event.addListener(curr, 'mouseover', function() {
-				this.info.open($scope.map, this);
-			});
-			google.maps.event.addListener(curr, 'mouseout', function() {
-				this.info.close();
-			});
-            if (markers.indexOf(curr) === -1) {
-                markers.push(curr);
+                    if (filter[filterIndex].comparator === 'Greater Than') {
+                        if (filteredResults[i].value < filter[filterIndex].amount) {
+                            tempMeasure.splice(tempMeasure.indexOf(filteredResults), 1);
+                        }
+                    } else if (filter[filterIndex].comparator === 'Less Than') {
+                        if (filteredResults[i].value > filter[filterIndex].amount) {
+                            tempMeasure.splice(tempMeasure.indexOf(filteredResults), 1);
+                        }
+                    }
+                } else {
+                    //remove measurement
+                    tempMeasure.splice(tempMeasure.indexOf(filteredResults), 1);
+                }
+                if (tempMeasure.length === 0) {
+                    results = null;
+                } else {
+                    results = tempMeasure;
+                }
             }
         }
-    }
+        temp.results = results;
+        return temp;
+	}
 
+    $scope.placeMarkers = function(results) {
+        for (var i=0; i<results.length; i++) {
+            if (results[i] !== null) {
+                var lat = results[i].coordinates.latitude;
+                var lng = results[i].coordinates.longitude;
+                var latlng = new google.maps.LatLng(parseFloat(lat), parseFloat(lng));
+                if ($scope.isLatest) {
+                    $scope.pointsArray.push({location: latlng, weight: results[i].measurements[0].value});
+                } else {
+                    $scope.pointsArray.push({location: latlng, weight: results[i].value});
+                }
+                var curr =
+                    new google.maps.Marker({
+                        map: $scope.map,
+                        position: latlng,
+                        title: "Lat: " + lat + ", Lng: " + lng
+                    });
+                var currInfo = "";
+                if ($scope.isLatest) {
+                    var currMeasurements = results[i].measurements;
+                    for (var j = 0; j < currMeasurements.length; j++) {
+                        currInfo += "<p>" +
+                            currMeasurements[j].parameter + ": " +
+                            currMeasurements[j].value + " " +
+                            currMeasurements[j].unit +
+                            "</p>" +
+                            "<hr/>";
+                    }
+                } else {
+                    var elementMeasurements = results[i];
+                    currInfo += "<p>" +
+                        elementMeasurements.parameter + ": " +
+                        elementMeasurements.value + " " +
+                        elementMeasurements.unit +
+                        "</p>" +
+                        "<hr/>";
+                }
+                curr.info = new google.maps.InfoWindow({
+                    content: currInfo
+                });
+                google.maps.event.addListener(curr, 'mouseover', function () {
+                    this.info.open($scope.map, this);
+                });
+                google.maps.event.addListener(curr, 'mouseout', function () {
+                    this.info.close();
+                });
+                if (markers.indexOf(curr) === -1) {
+                    markers.push(curr);
+                }
+            }
+        }
+        $scope.markerCluster = new MarkerClusterer($scope.map, markers, {
+            imagePath: 'images/m'
+        });
+        if($scope.heatmap !== undefined) {
+            $scope.heatmap.setMap(null);
+        }
+        $scope.heatmap = new google.maps.visualization.HeatmapLayer({
+            data: $scope.pointsArray,
+            map: $scope.map
+        });
+        $scope.heatmap.setMap(null);
+    };
+
+    $scope.toggleHeatmap = function() {
+        if($scope.checkForOneParticleFilter()) {
+            $scope.heatmap.setMap($scope.heatmap.getMap() ? null : $scope.map);
+        } else {
+            window.alert('You must only have one particle selected to view the heat map.');
+        }
+    };
+
+    $scope.checkForOneParticleFilter = function () {
+        var filters = getFilterInfo();
+        return (filters.length === 1);
+    };
+
+    $scope.checkIfLatest = function () {
+        var startDate = $("#calendar-start");
+        var endDate = $("#calendar-end");
+        var actualStartDate = startDate.val();
+        var actualEndDate = endDate.val();
+        var currentDate = $.datepicker.formatDate('mm/dd/yy', new Date());
+        if(actualEndDate === undefined || (actualEndDate === actualStartDate && actualStartDate === currentDate)){
+            return true;
+        } else {
+            return false;
+        }
+    };
 });
 
 function initFilterBody() {
