@@ -41,17 +41,7 @@ indexApp.controller('IndexController', function PhoneListController($scope) {
                 }
             });
         });
-
         $("#map").append("<img id='legend' src='images/legend.png'/>");
-
-        /*$scope.map.addListener('zoom_changed', function() {
-            var stuff = 1;
-        });*/
-        // var marker = new google.maps.Marker({
-        //     position: uluru,
-        //     map: map
-        // });
-
     };
 
     $scope.initSearchBox = function () {
@@ -81,22 +71,6 @@ indexApp.controller('IndexController', function PhoneListController($scope) {
                     console.log("Returned place contains no geometry");
                     return;
                 }
-                /*var icon = {
-                    url: place.icon,
-                    size: new google.maps.Size(71, 71),
-                    origin: new google.maps.Point(0, 0),
-                    anchor: new google.maps.Point(17, 34),
-                    scaledSize: new google.maps.Size(25, 25)
-                };
-
-                // Create a marker for each place.
-                markers.push(new google.maps.Marker({
-                    map: $scope.map,
-                    icon: icon,
-                    title: place.name,
-                    position: place.geometry.location
-                }));*/
-
                 if (place.geometry.viewport) {
                     // Only geocodes have viewport.
                     bounds.union(place.geometry.viewport);
@@ -147,35 +121,25 @@ indexApp.controller('IndexController', function PhoneListController($scope) {
                 coordinates: coordinates,
                 radius: distance/2,
                 limit: 10000
-                //date_from: $("#calendar-start").val(),
-                //date_to: $("#calendar-end").val()
             };
         }
-        //if($scope.isLatest) {
-            $.ajax({
-                url: url,
-                data: send,
-                type: 'GET',
-                cache: false,
-                contentType: "application/json; charset=utf-8",
-                success: function (data) {
-                    var newData = JSON.parse(JSON.stringify(data));
-                    newData = filterData(newData, filter);
-                    $scope.airQuality = newData.results;
-                    $scope.$apply();
-                    $scope.placeMarkers($scope.airQuality);
-                },
-                error: function (error) {
-                    alert('error: request failed, sorry, but the https://docs.openaq.org/#api-Measurements api is a dumpster fire. Please turn off the history filter.');
-                }
-            });
-        /*} else {
-            var input = "{\"results\":[{\"location\":\"St Marys\",\"parameter\":\"pm25\",\"date\":{\"utc\":\"2018-04-05T00:00:00.000Z\",\"local\":\"2018-04-05T10:00:00+10:00\"},\"value\":5.3,\"unit\":\"µg/m³\",\"coordinates\":{\"latitude\":-33.7972222,\"longitude\":150.7658333},\"country\":\"AU\",\"city\":\"Sydney North-west\"},{\"location\":\"Bathurst\",\"parameter\":\"pm10\",\"date\":{\"utc\":\"2018-04-05T00:00:00.000Z\",\"local\":\"2018-04-05T10:00:00+10:00\"},\"value\":17.9,\"unit\":\"µg/m³\",\"coordinates\":{\"latitude\":-33.4033333,\"longitude\":149.5733333},\"country\":\"AU\",\"city\":\"Central Tablelands\"}]}";
-            var newData = JSON.parse(input);
-            newData = filterData(newData, filter);
-            $scope.airQuality = newData.results;
-            $scope.placeMarkers($scope.airQuality);
-        }*/
+		$.ajax({
+			url: url,
+			data: send,
+			type: 'GET',
+			cache: false,
+			contentType: "application/json; charset=utf-8",
+			success: function (data) {
+				var newData = JSON.parse(JSON.stringify(data));
+				newData = filterData(newData, filter);
+				$scope.airQuality = newData.results;
+				$scope.$apply();
+				$scope.placeMarkers($scope.airQuality);
+			},
+			error: function (error) {
+				alert('Error: Request failed to https://docs.openaq.org/#api-Measurements api. Please turn off the history filter or try again later.');
+			}
+		});
     };
 
 	$scope.submitRequest = function () {
@@ -218,11 +182,11 @@ indexApp.controller('IndexController', function PhoneListController($scope) {
                     if (filterIndex !== -1) {
 
                         if (filter[filterIndex].comparator === 'Greater Than') {
-                            if (measurements[j].value < filter[filterIndex].amount) {
+                            if (measurements[j].value <= filter[filterIndex].amount) {
                                 tempMeasure.splice(tempMeasure.indexOf(measurements[j]), 1);
                             }
                         } else if (filter[filterIndex].comparator === 'Less Than') {
-                            if (measurements[j].value > filter[filterIndex].amount) {
+                            if (measurements[j].value >= filter[filterIndex].amount) {
                                 tempMeasure.splice(tempMeasure.indexOf(measurements[j]), 1);
                             }
                         }
@@ -245,24 +209,24 @@ indexApp.controller('IndexController', function PhoneListController($scope) {
                 if (filterIndex !== -1) {
 
                     if (filter[filterIndex].comparator === 'Greater Than') {
-                        if (filteredResults[i].value < filter[filterIndex].amount) {
+                        if (filteredResults[i].value <= filter[filterIndex].amount) {
                             tempMeasure.splice(tempMeasure.indexOf(filteredResults), 1);
                         }
                     } else if (filter[filterIndex].comparator === 'Less Than') {
-                        if (filteredResults[i].value > filter[filterIndex].amount) {
+                        if (filteredResults[i].value >= filter[filterIndex].amount) {
                             tempMeasure.splice(tempMeasure.indexOf(filteredResults), 1);
                         }
                     }
                 } else {
                     //remove measurement
-                    tempMeasure.splice(tempMeasure.indexOf(filteredResults), 1);
-                }
-                if (tempMeasure.length === 0) {
-                    results = null;
-                } else {
-                    results = tempMeasure;
+                    tempMeasure.splice(tempMeasure.indexOf(filteredResults[i]), 1);
                 }
             }
+			if (tempMeasure.length === 0) {
+				results = null;
+			} else {
+				results = tempMeasure;
+			}
         }
         temp.results = results;
         return temp;
